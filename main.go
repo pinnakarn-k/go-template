@@ -39,13 +39,9 @@ func main() {
 		AppName: "Transaction API",
 	})
 
-	// Dependency injection
-	transactionRepository := transaction.NewPostgresRepository(db)
-	transactionService := transaction.NewService(transactionRepository)
-	transactionHandler := transaction.NewHandler(transactionService)
-
-	// Router
-	app.Post("/transactions/search", transactionHandler.Search)
+	// modules
+	transactionModule := transaction.NewModule(db)
+	transactionModule.RegisterRoutes(app)
 
 	app.Get("/health", func(c *fiber.Ctx) error {
 		pingCtx, pingCancel := context.WithTimeout(c.Context(), 2*time.Second)

@@ -36,7 +36,7 @@ func (h *Handler) Search(c *fiber.Ctx) error {
 
 	if err := h.validate.Struct(req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "account_id, transacted_at_start and transacted_at_end are required",
+			"error": "accountId, transactedAtStart and transactedAtEnd are required",
 		})
 	}
 

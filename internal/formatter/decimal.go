@@ -1,22 +1,12 @@
-package transaction
+package formatter
 
 import (
 	"strings"
-	"time"
 
 	"github.com/shopspring/decimal"
 )
 
-func formatDate(value *time.Time) *string {
-	if value == nil {
-		return nil
-	}
-
-	formatted := value.Format("02/01/2006")
-	return &formatted
-}
-
-func formatDecimal(value *decimal.Decimal) *string {
+func FormatDecimal(value *decimal.Decimal) *string {
 	if value == nil {
 		return nil
 	}

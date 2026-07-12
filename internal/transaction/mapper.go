@@ -1,5 +1,7 @@
 package transaction
 
+import "transaction-api/internal/formatter"
+
 func toSearchItem(record SearchRecord) SearchItem {
 	return SearchItem{
 		ID:              record.ID,
@@ -8,12 +10,12 @@ func toSearchItem(record SearchRecord) SearchItem {
 		TransactionType: record.TransactionType,
 		Side:            record.Side,
 		SideName:        mapSideName(record.Side),
-		Amount:          formatDecimal(record.Amount),
-		Fee:             formatDecimal(record.Fee),
+		Amount:          formatter.FormatDecimal(record.Amount),
+		Fee:             formatter.FormatDecimal(record.Fee),
 		Currency:        record.Currency,
 		Status:          record.Status,
 		Description:     record.Description,
-		TransactedAt:    formatDate(record.TransactedAt),
+		TransactedAt:    formatter.FormatDate(record.TransactedAt),
 	}
 }
 
