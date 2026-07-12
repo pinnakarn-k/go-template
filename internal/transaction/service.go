@@ -7,6 +7,18 @@ import (
 	"transaction-api/internal/pagination"
 )
 
+type Repository interface {
+	Search(ctx context.Context, filter SearchFilter) ([]SearchRecord, int64, error)
+}
+
+type Service struct {
+	repository Repository
+}
+
+func NewService(repository Repository) *Service {
+	return &Service{repository: repository}
+}
+
 type SearchItem struct {
 	ID              int64   `json:"id"`
 	ReferenceCode   *string `json:"reference_code"`
@@ -29,18 +41,6 @@ type SearchOutput struct {
 
 var ErrInvalidTimeRange = errors.New("transacted_at_start must not be after transacted_at_end")
 var ErrInvalidDateFormat = errors.New("transacted_at_start and transacted_at_end must use YYYY-MM-DD format")
-
-type Repository interface {
-	Search(ctx context.Context, filter SearchFilter) ([]SearchRecord, int64, error)
-}
-
-type Service struct {
-	repository Repository
-}
-
-func NewService(repository Repository) *Service {
-	return &Service{repository: repository}
-}
 
 func (s *Service) Search(ctx context.Context, req SearchRequest) (SearchOutput, error) {
 	transactedAtStart, err := time.Parse(
@@ -74,6 +74,8 @@ func (s *Service) Search(ctx context.Context, req SearchRequest) (SearchOutput, 
 		TransactedAtEnd:   transactedAtEnd,
 		Limit:             page.Limit(),
 		Offset:            page.Offset(),
+		SortBy:            req.SortBy,
+		SortOrder:         req.SortOrder,
 	}
 
 	records, total, err := s.repository.Search(ctx, filter)

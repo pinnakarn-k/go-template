@@ -3,11 +3,20 @@ package transaction
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/shopspring/decimal"
 )
+
+type PostgresRepository struct {
+	db *pgxpool.Pool
+}
+
+func NewPostgresRepository(db *pgxpool.Pool) *PostgresRepository {
+	return &PostgresRepository{db: db}
+}
 
 type SearchFilter struct {
 	AccountID         int64
@@ -15,6 +24,8 @@ type SearchFilter struct {
 	TransactedAtEnd   time.Time
 	Limit             int
 	Offset            int
+	SortBy            string
+	SortOrder         string
 }
 
 type SearchRecord struct {
@@ -38,12 +49,25 @@ WHERE account_id = $1
   AND transacted_at <= $3
 `
 
-type PostgresRepository struct {
-	db *pgxpool.Pool
-}
+func buildSearchOrder(filter SearchFilter) string {
+	columns := map[string]string{
+		"transacted_at": "transacted_at",
+		"amount":        "amount",
+		"fee":           "fee",
+		"status":        "status",
+	}
 
-func NewPostgresRepository(db *pgxpool.Pool) *PostgresRepository {
-	return &PostgresRepository{db: db}
+	column, ok := columns[filter.SortBy]
+	if !ok {
+		column = "transacted_at"
+	}
+
+	order := "DESC"
+	if strings.ToLower(filter.SortOrder) == "asc" {
+		order = "ASC"
+	}
+
+	return column + " " + order
 }
 
 func (r *PostgresRepository) Search(
@@ -91,7 +115,9 @@ func (r *PostgresRepository) search(
 	ctx context.Context,
 	filter SearchFilter,
 ) ([]SearchRecord, error) {
-	const query = `
+	orderBy := buildSearchOrder(filter)
+
+	query := `
 		SELECT
 			id,
 			reference_code,
@@ -105,7 +131,7 @@ func (r *PostgresRepository) search(
 			description,
 			transacted_at
 	` + searchBase + `
-		ORDER BY transacted_at DESC
+		ORDER BY ` + orderBy + `, id DESC
 		LIMIT $4
 		OFFSET $5
 	`
